@@ -1,32 +1,67 @@
-"""djangoproj URL Configuration
+# Uncomment the required imports before adding the code
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/3.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-from django.contrib import admin
-from django.urls import path, include
-from django.views.generic import TemplateView
-from django.conf.urls.static import static
-from django.conf import settings
-from djangoapp import views  # Add this line
+from django.shortcuts import render
+from django.http import HttpResponseRedirect, HttpResponse
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth import logout
+from django.contrib import messages
+from datetime import datetime
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('djangoapp/', include('djangoapp.urls')),
-    path('about/', TemplateView.as_view(template_name="About.html")),
-    path('contact/', TemplateView.as_view(template_name="Contact.html")),
-    path(route='login', view=views.login_user, name='login'),
-    path(route='logout', view=views.logout_request, name='logout'),
-    path('login/', TemplateView.as_view(template_name="index.html")),
-    path('', TemplateView.as_view(template_name="Home.html")),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+from django.http import JsonResponse
+from django.contrib.auth import login, authenticate
+import logging
+import json
+from django.views.decorators.csrf import csrf_exempt
+# from .populate import initiate
+
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
+
+# Create your views here.
+
+# Create a `login_request` view to handle sign in request
+@csrf_exempt
+def login_user(request):
+    # Get username and password from request.POST dictionary
+    data = json.loads(request.body)
+    username = data['userName']
+    password = data['password']
+    # Try to check if provide credential can be authenticated
+    user = authenticate(username=username, password=password)
+    data = {"userName": username}
+    if user is not None:
+        # If user is valid, call login method to login current user
+        login(request, user)
+        data = {"userName": username, "status": "Authenticated"}
+    return JsonResponse(data)
+
+# Create a `logout_request` view to handle sign out request
+def logout_request(request):
+    print("Log out the user `{}`".format(request.user.username))
+    logout(request)
+    return redirect('djangoapp:index')
+
+# Create a `registration` view to handle sign up request
+# @csrf_exempt
+# def registration(request):
+# ...
+
+# # Update the `get_dealerships` view to render the index page with
+# a list of dealerships
+# def get_dealerships(request):
+# ...
+
+# Create a `get_dealer_reviews` view to render the reviews of a dealer
+# def get_dealer_reviews(request,dealer_id):
+# ...
+
+# Create a `get_dealer_details` view to render the dealer details
+# def get_dealer_details(request, dealer_id):
+# ...
+
+# Create a `add_review` view to submit a review
+# def add_review(request):
+# ...
